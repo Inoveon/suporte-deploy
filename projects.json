@@ -1,0 +1,44 @@
+{
+  "project_name": "suporte",
+  "domain": "office.inoveon.com.br",
+  "server": "10.0.20.11",
+  "ssh_host": "i9-deploy",
+  "deploy_path": "/docker/inoveon/suporte",
+  "components": [
+    {
+      "name": "api",
+      "type": "fastapi",
+      "repo": "https://github.com/Inoveon/suporte_chamados_api_fastapi.git",
+      "path": "api/suporte_chamados_api_fastapi",
+      "port": 8000,
+      "health_endpoint": "/health",
+      "traefik_path": "/api/suporte",
+      "strip_prefix": true
+    },
+    {
+      "name": "web", 
+      "type": "react",
+      "repo": "https://github.com/Inoveon/suporte_dashboard_web_react.git",
+      "path": "web/suporte_dashboard_web_react",
+      "port": 80,
+      "build_tool": "vite",
+      "traefik_path": "/portal/suporte",
+      "strip_prefix": false
+    },
+    {
+      "name": "mobile",
+      "type": "flutter",
+      "repo": "https://github.com/Inoveon/suporte_tecnico_mobile_flutter.git",
+      "path": "mobile/suporte_tecnico_mobile_flutter",
+      "enabled": false
+    }
+  ],
+  "traefik": {
+    "network": "traefik_net",
+    "entrypoints": {
+      "web": "80",
+      "websecure": "443"
+    },
+    "certresolver": "letsencrypt"
+  }
+}
