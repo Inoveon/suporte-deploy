@@ -1,0 +1,54 @@
+# 📁 Projetos (baixados via clone-projects.sh)
+api/suporte_chamados_api_fastapi/
+web/suporte_dashboard_web_react/
+mobile/suporte_tecnico_mobile_flutter/
+
+# 📄 Arquivos de ambiente
+.env
+.env.local
+.env.production
+
+# 📊 Logs e temporários
+*.log
+logs/
+temp/
+backup/
+
+# 🐳 Docker
+.dockerignore
+docker-compose.override.yml
+
+# 💾 Dados persistentes
+data/
+volumes/
+
+# 🔧 IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 📱 Mobile
+mobile/build/
+mobile/.dart_tool/
+
+# 🌐 Web
+web/node_modules/
+web/dist/
+web/build/
+
+# 🔙 API
+api/__pycache__/
+api/.pytest_cache/
+api/htmlcov/
+api/coverage.xml
+
+# 🏠 OS
+.DS_Store
+Thumbs.db
+
+# 🚫 Secrets
+*.key
+*.pem
+*.p12
+ssh_keys/
