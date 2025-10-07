@@ -20,6 +20,12 @@ Este repositório contém **apenas as configurações e scripts de deploy**. Os 
 git clone https://github.com/inoveon/suporte-deploy.git suporte
 cd suporte
 
+# Instalar dependências (primeira vez)
+./scripts/install-dependencies.sh
+
+# Configurar SSH (primeira vez)
+./scripts/setup-ssh.sh 10.0.20.11 username password
+
 # Clone dos projetos
 ./clone-projects.sh
 
@@ -76,6 +82,7 @@ suporte/
 
 ## 🛠️ Comandos Úteis
 
+### Deploy e Monitoramento
 ```bash
 # Atualizar todos os projetos
 ./scripts/update-all.sh
@@ -83,11 +90,29 @@ suporte/
 # Backup completo
 ./scripts/backup.sh
 
+# Ver logs em tempo real
+./scripts/logs.sh api -f
+
+# Health check completo
+./scripts/health-check.sh
+
 # Ver logs do Traefik
 docker logs traefik -f
+```
 
-# Health check geral
-curl https://office.inoveon.com.br/api/suporte/health
+### SSH e Conectividade
+```bash
+# Configurar SSH pela primeira vez
+./scripts/setup-ssh.sh 10.0.20.11 lee mypassword
+
+# Verificar configuração SSH
+./scripts/setup-ssh.sh --check-only
+
+# Forçar nova chave SSH
+./scripts/setup-ssh.sh 10.0.20.11 lee mypassword --force-new
+
+# Testar conexão
+ssh i9-deploy 'echo "SSH OK"'
 ```
 
 ## ⚙️ Configuração
@@ -101,9 +126,15 @@ cp web/deploy/.env.template web/deploy/.env
 ```
 
 ### SSH
-Configure a chave SSH para o servidor:
+Configure a chave SSH automaticamente:
 ```bash
-# Já configurado para o servidor 10.0.20.11
+# Configuração automática (primeira vez)
+./scripts/setup-ssh.sh 10.0.20.11 username password
+
+# Verificar configuração existente
+./scripts/setup-ssh.sh --check-only
+
+# Testar conexão
 ssh i9-deploy 'echo "SSH OK"'
 ```
 
