@@ -7,8 +7,8 @@ services:
   # 🔧 API Backend
   suporte-api:
     build:
-      context: ./api/suporte_chamados_api_fastapi
-      dockerfile: ../api/deploy/Dockerfile.prod
+      context: ./api/src
+      dockerfile: ../Dockerfile.prod
     container_name: suporte-api
     restart: unless-stopped
     env_file:
@@ -20,8 +20,8 @@ services:
     ports:
       - "8002:8002"
     volumes:
-      - ../api/suporte_chamados_api_fastapi/uploads:/app/uploads
-      - ../api/suporte_chamados_api_fastapi/logs:/app/logs
+      - ./api/uploads:/app/uploads
+      - ./api/logs:/app/logs
     depends_on:
       suporte-redis:
         condition: service_healthy
@@ -62,8 +62,8 @@ services:
   # 🌐 Web Portal
   suporte-portal:
     build:
-      context: ./web/suporte_dashboard_web_react
-      dockerfile: ../web/deploy/Dockerfile.prod
+      context: ./web/src
+      dockerfile: ../Dockerfile.prod
     container_name: suporte-portal
     restart: unless-stopped
     env_file:
