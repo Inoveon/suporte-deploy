@@ -119,7 +119,20 @@ else
         run_remote "cd $REMOTE_DIR/api && docker compose -f docker-compose.prod.yml up -d"
     else
         echo -e "${YELLOW}⚠️  Executando container diretamente...${NC}"
-        run_remote "cd $REMOTE_DIR/api && docker run -d --name suporte-api --env-file .env -p 8000:8000 suporte-api:latest"
+        run_remote "cd $REMOTE_DIR/api && docker run -d --name suporte-api --env-file .env --network database_net --network traefik_net \
+            -p 8002:8002 \
+            -l 'traefik.enable=true' \
+            -l 'traefik.http.routers.suporte-api.rule=Host(\`office.inoveon.com.br\`) && PathPrefix(\`/api/suporte\`)' \
+            -l 'traefik.http.routers.suporte-api.tls=true' \
+            -l 'traefik.http.routers.suporte-api.tls.certresolver=letsencrypt' \
+            -l 'traefik.http.services.suporte-api.loadbalancer.server.port=8002' \
+            -l 'traefik.http.middlewares.suporte-api-stripprefix.stripprefix.prefixes=/api/suporte' \
+            -l 'traefik.http.routers.suporte-api.middlewares=suporte-api-stripprefix' \
+            -l 'traefik.http.routers.suporte-api-ip.rule=Host(\`10.0.20.11\`) && PathPrefix(\`/api/suporte\`)' \
+            -l 'traefik.http.routers.suporte-api-ip.entrypoints=web' \
+            -l 'traefik.http.routers.suporte-api-ip.service=suporte-api@docker' \
+            -l 'traefik.http.routers.suporte-api-ip.middlewares=suporte-api-stripprefix' \
+            suporte-api:latest"
     fi
 fi
 
@@ -130,7 +143,7 @@ sleep 10
 # Health check
 echo -e "${BLUE}🏥 Verificando saúde da aplicação...${NC}"
 for i in {1..30}; do
-    if run_remote "curl -f http://localhost:8000/health" &>/dev/null; then
+    if run_remote "docker exec suporte-api curl -f http://localhost:8002/health" &>/dev/null; then
         echo -e "${GREEN}✅ API está respondendo${NC}"
         break
     fi

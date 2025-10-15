@@ -22,8 +22,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production --no-audit --no-fund \
+# Install dependencies (including dev dependencies for build)
+RUN npm install --no-audit --no-fund \
     && npm cache clean --force
 
 # Copy source code
@@ -35,8 +35,8 @@ ENV VITE_BASE_PATH=/portal/suporte/ \
     VITE_ENVIRONMENT=production \
     GENERATE_SOURCEMAP=false
 
-# Build application
-RUN npm run build
+# Build application (use local vite installation)
+RUN NODE_ENV=production npx vite build --mode production
 
 # Production stage
 FROM nginx:1.27-alpine
@@ -60,20 +60,21 @@ COPY --from=build /app/dist /usr/share/nginx/html/portal/suporte
 
 # Create custom nginx configuration
 COPY <<'EOF' /etc/nginx/conf.d/default.conf
-# 🌐 Nginx Configuration - Suporte Portal
+# 🌐 Nginx Configuration - Suporte Portal (Hybrid Deploy)
+# Suporta acesso via raiz (dev) e /portal/suporte (prod)
 server {
-    listen 80;
+    listen 3002;
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
-    
+
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://office.inoveon.com.br;" always;
-    
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://10.0.20.11:8002 https://office.inoveon.com.br;" always;
+
     # Gzip compression
     gzip on;
     gzip_vary on;
@@ -86,18 +87,18 @@ server {
         application/javascript
         application/xml+rss
         application/json;
-    
+
     # Cache static assets
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
         try_files $uri =404;
     }
-    
-    # Portal route
+
+    # 🌐 HYBRID DEPLOY: Produção - Acesso via /portal/suporte (Traefik)
     location /portal/suporte {
         try_files $uri $uri/ /portal/suporte/index.html;
-        
+
         # No cache for HTML files
         location ~* \.html$ {
             expires -1;
@@ -105,28 +106,40 @@ server {
             add_header Pragma "no-cache";
         }
     }
-    
+
+    # 🌐 HYBRID DEPLOY: Desenvolvimento - Acesso direto via raiz (IP:3002)
+    location / {
+        try_files $uri $uri/ /portal/suporte/index.html;
+
+        # No cache for HTML files
+        location ~* \.html$ {
+            expires -1;
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+        }
+    }
+
     # Health check
     location /health {
         access_log off;
         return 200 "healthy\n";
         add_header Content-Type text/plain;
     }
-    
+
     # Block hidden files
     location ~ /\. {
         deny all;
         access_log off;
         log_not_found off;
     }
-    
+
     # Block common attack patterns
     location ~* \.(php|asp|aspx|jsp)$ {
         deny all;
         access_log off;
         log_not_found off;
     }
-    
+
     # Error pages
     error_page 404 /portal/suporte/index.html;
     error_page 500 502 503 504 /50x.html;
@@ -187,10 +200,10 @@ USER nginx
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:80/health || exit 1
+    CMD curl -f http://localhost:3002/health || exit 1
 
 # Expose port
-EXPOSE 80
+EXPOSE 3002
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

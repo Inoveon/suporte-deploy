@@ -137,7 +137,18 @@ else
         run_remote "cd $REMOTE_DIR/web && docker compose -f docker-compose.prod.yml up -d"
     else
         echo -e "${YELLOW}⚠️  Executando container diretamente...${NC}"
-        run_remote "cd $REMOTE_DIR/web && docker run -d --name suporte-portal --env-file .env -p 80:80 suporte-portal:latest"
+        run_remote "cd $REMOTE_DIR/web && docker run -d --name suporte-portal --env-file .env --network traefik_net \
+            -p 3002:3002 \
+            -l 'traefik.enable=true' \
+            -l 'traefik.http.routers.suporte-portal.rule=Host(\`office.inoveon.com.br\`) && PathPrefix(\`/portal/suporte\`)' \
+            -l 'traefik.http.routers.suporte-portal.entrypoints=websecure' \
+            -l 'traefik.http.routers.suporte-portal.tls=true' \
+            -l 'traefik.http.routers.suporte-portal.tls.certresolver=letsencrypt' \
+            -l 'traefik.http.services.suporte-portal.loadbalancer.server.port=3002' \
+            -l 'traefik.http.routers.suporte-portal-ip.rule=Host(\`10.0.20.11\`) && PathPrefix(\`/portal/suporte\`)' \
+            -l 'traefik.http.routers.suporte-portal-ip.entrypoints=web' \
+            -l 'traefik.http.routers.suporte-portal-ip.service=suporte-portal@docker' \
+            suporte-portal:latest"
     fi
 fi
 
@@ -148,7 +159,7 @@ sleep 5
 # Health check
 echo -e "${BLUE}🏥 Verificando saúde da aplicação...${NC}"
 for i in {1..15}; do
-    if run_remote "curl -f http://localhost:80/health" &>/dev/null; then
+    if run_remote "curl -f http://localhost:3002/health" &>/dev/null; then
         echo -e "${GREEN}✅ Portal está respondendo${NC}"
         break
     fi
@@ -163,7 +174,7 @@ done
 
 # Verificar se assets estão sendo servidos corretamente
 echo -e "${BLUE}🎨 Verificando assets...${NC}"
-if run_remote "curl -f http://localhost:80/portal/suporte/" &>/dev/null; then
+if run_remote "curl -f http://localhost:3002/portal/suporte/" &>/dev/null; then
     echo -e "${GREEN}✅ Portal acessível${NC}"
 else
     echo -e "${YELLOW}⚠️  Portal pode ter problemas de roteamento${NC}"

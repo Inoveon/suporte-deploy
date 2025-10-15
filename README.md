@@ -12,60 +12,75 @@ Este repositório contém **apenas as configurações e scripts de deploy**. Os 
 - **Proxy Reverso**: Traefik v3.1 com SSL automático
 - **Servidor**: 10.0.20.11
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Makefile)
 
-### 1. Clone e Setup
+O projeto inclui um **Makefile completo** com todos os comandos necessários:
+
+### **Setup Completo (Primeira Vez)**
 ```bash
 # Clone das configurações
 git clone https://github.com/inoveon/suporte-deploy.git suporte
 cd suporte
 
-# Instalar dependências (primeira vez)
-./scripts/install-dependencies.sh
+# Setup automático completo
+make first-time
 
-# Configurar SSH (primeira vez)
-./scripts/setup-ssh.sh 10.0.20.11 username password
-
-# Clone dos projetos
-./clone-projects.sh
-
-# Configuração inicial
-./setup.sh
+# OU passo a passo:
+make install                    # Instalar dependências
+make ssh PASSWORD=senha123      # Configurar SSH
+make clone                      # Clonar projetos
+make setup                      # Setup inicial
+# Editar arquivos .env
+make deploy                     # Deploy completo
 ```
 
-### 2. Deploy
+### **Uso Diário**
 ```bash
-# Deploy completo
-./deploy/deploy.sh
-
-# Deploy individual
-./api/deploy/deploy.sh
-./web/deploy/deploy.sh
+make status                     # Verificar tudo
+make health                     # Health check completo
+make logs-follow SERVICE=api    # Logs em tempo real
+make update                     # Atualizar e redeploy
 ```
 
-### 3. Monitoramento
+### **Comandos Principais**
 ```bash
-# Logs em tempo real
-./scripts/logs.sh
-
-# Health check
-./scripts/health-check.sh
+make help                       # Lista todos os comandos
+make deploy                     # Deploy completo
+make deploy-api                 # Deploy apenas API
+make deploy-web                 # Deploy apenas Portal
+make backup                     # Backup completo
+make urls                       # Mostrar URLs do sistema
 ```
 
 ## 📁 Estrutura
 
 ```
 suporte/
-├── docs/                         # Documentação
+├── 📋 Makefile                    # Interface simplificada (40+ comandos)
+├── 📚 CLAUDE.md                   # Documentação para Claude Code
+├── 📖 README.md                   # Este arquivo
+├── 🏗️ deploy/                     # Deploy geral e orquestração
+│   ├── deploy.sh                 # Script principal de deploy
+│   └── docker-compose.prod.yml   # Configuração Docker/Traefik
+├── 🔧 api/deploy/                 # Deploy específico da API
+│   ├── deploy.sh                 # Deploy individual da API
+│   └── Dockerfile.prod           # Build otimizado para produção
+├── 🌐 web/deploy/                 # Deploy específico do Portal
+│   ├── deploy.sh                 # Deploy individual do Portal
+│   └── Dockerfile.prod           # Build com Nginx otimizado
+├── 📱 mobile/deploy/              # Deploy específico do Mobile
+├── 🛠️ scripts/                    # Scripts utilitários
+│   ├── install-dependencies.sh  # Instalação de dependências
+│   ├── setup-ssh.sh             # Configuração automática SSH
+│   ├── health-check.sh          # Health check completo
+│   ├── backup.sh                # Sistema de backup
+│   ├── logs.sh                  # Visualização de logs
+│   └── update-all.sh            # Atualização automática
+├── 📊 docs/                       # Documentação técnica
 │   └── DEPLOY-ARCHITECTURE.md    # Arquitetura detalhada
-├── deploy/                       # Deploy geral
-│   ├── deploy.sh
-│   └── docker-compose.prod.yml
-├── api/deploy/                   # Deploy API
-├── web/deploy/                   # Deploy Portal
-├── scripts/                     # Utilitários
-├── clone-projects.sh            # Clone dos projetos
-└── setup.sh                    # Setup inicial
+├── 🔗 clone-projects.sh           # Clone automático dos projetos
+├── ⚙️ setup.sh                    # Configuração inicial
+└── 📋 projects.json               # Configuração dos projetos
 ```
 
 ## 🔗 Projetos Relacionados
@@ -80,63 +95,114 @@ suporte/
 - **[Guia de Setup](docs/SETUP-GUIDE.md)** - Configuração passo a passo
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Solução de problemas
 
-## 🛠️ Comandos Úteis
+## 🛠️ Comandos Disponíveis (Makefile)
 
-### Deploy e Monitoramento
+### **📦 Instalação e Setup**
 ```bash
-# Atualizar todos os projetos
-./scripts/update-all.sh
-
-# Backup completo
-./scripts/backup.sh
-
-# Ver logs em tempo real
-./scripts/logs.sh api -f
-
-# Health check completo
-./scripts/health-check.sh
-
-# Ver logs do Traefik
-docker logs traefik -f
+make install          # Instalar todas as dependências
+make ssh PASSWORD=senha  # Configurar chaves SSH
+make ssh-check        # Verificar configuração SSH
+make setup            # Configuração inicial do ambiente
+make clone            # Clonar todos os projetos
+make first-time       # Setup completo primeira vez
 ```
 
-### SSH e Conectividade
+### **🚀 Deploy**
 ```bash
-# Configurar SSH pela primeira vez
-./scripts/setup-ssh.sh 10.0.20.11 lee mypassword
+make deploy           # Deploy completo de todos os serviços
+make deploy-api       # Deploy apenas da API
+make deploy-web       # Deploy apenas do Portal Web
+make deploy-infra     # Deploy apenas da infraestrutura
+make deploy-force     # Deploy com rebuild forçado
+```
 
-# Verificar configuração SSH
-./scripts/setup-ssh.sh --check-only
+### **📊 Monitoramento e Logs**
+```bash
+make status           # Verificar status de todos os serviços
+make health           # Health check completo do sistema
+make logs SERVICE=api # Ver logs específicos
+make logs-follow SERVICE=api  # Seguir logs em tempo real
+make logs-api         # Ver logs da API (shortcut)
+make logs-web         # Ver logs do Portal (shortcut)
+make logs-db          # Ver logs do Banco (shortcut)
+```
 
-# Forçar nova chave SSH
-./scripts/setup-ssh.sh 10.0.20.11 lee mypassword --force-new
+### **💾 Backup e Manutenção**
+```bash
+make backup           # Backup completo do sistema
+make backup-db        # Backup apenas do banco de dados
+make backup-list      # Listar backups existentes
+make backup-clean     # Limpar backups antigos
+```
 
-# Testar conexão
-ssh i9-deploy 'echo "SSH OK"'
+### **🔄 Atualização**
+```bash
+make update           # Atualizar todos os projetos e redeploy
+make update-api       # Atualizar apenas API
+make update-web       # Atualizar apenas Portal
+make update-force     # Atualização forçada
+```
+
+### **🛠️ Utilitários**
+```bash
+make restart          # Reiniciar todos os serviços
+make stop             # Parar todos os serviços
+make clean            # Limpeza completa (containers, imagens, volumes)
+make test             # Executar todos os testes de validação
+make config-show      # Mostrar configurações atuais
+make urls             # Mostrar URLs importantes
+make help             # Mostrar todos os comandos disponíveis
+make help-full        # Ajuda completa com exemplos
+```
+
+### **🎯 Aliases e Shortcuts**
+```bash
+make up               # Alias para deploy
+make down             # Alias para stop
+make ps               # Alias para status
 ```
 
 ## ⚙️ Configuração
 
-### Variáveis de Ambiente
-Copie os templates e configure:
+### **Fluxo Completo de Setup (Recomendado)**
 ```bash
-cp deploy/.env.template deploy/.env
-cp api/deploy/.env.template api/deploy/.env
-cp web/deploy/.env.template web/deploy/.env
+# 1. Clone e instalação
+git clone https://github.com/inoveon/suporte-deploy.git suporte
+cd suporte
+make install
+
+# 2. Configurar SSH
+make ssh PASSWORD=suasenha123
+
+# 3. Clone dos projetos e setup
+make clone
+make setup
+
+# 4. Configurar variáveis de ambiente
+# Editar: deploy/.env, api/deploy/.env, web/deploy/.env
+
+# 5. Deploy
+make deploy
 ```
 
-### SSH
-Configure a chave SSH automaticamente:
+### **Variáveis de Ambiente**
+O setup criará templates automaticamente:
+- `deploy/.env` - Configurações gerais
+- `api/deploy/.env` - Configurações específicas da API  
+- `web/deploy/.env` - Configurações específicas do Portal
+
+### **SSH Automático**
 ```bash
-# Configuração automática (primeira vez)
-./scripts/setup-ssh.sh 10.0.20.11 username password
-
-# Verificar configuração existente
-./scripts/setup-ssh.sh --check-only
-
-# Testar conexão
-ssh i9-deploy 'echo "SSH OK"'
+make ssh PASSWORD=senha         # Configurar chaves SSH
+make ssh-check                  # Verificar configuração
+ssh i9-deploy 'echo "SSH OK"'   # Testar conexão
 ```
+
+### **Configurações do Servidor**
+- **IP**: 10.0.20.11
+- **Usuário**: lee (configurável via USERNAME)
+- **Alias SSH**: i9-deploy
+- **Chave SSH**: ~/.ssh/id_rsa_i9_deploy
 
 ## 🌐 URLs de Produção
 
@@ -166,6 +232,34 @@ ssh i9-deploy 'echo "SSH OK"'
 
 ---
 
+## 💡 Dicas e Exemplos
+
+### **Uso Diário Típico**
+```bash
+make status              # Verificar se tudo está OK
+make health              # Health check completo
+make logs-follow SERVICE=api  # Ver logs em tempo real
+make update              # Atualizar código e redeploy
+```
+
+### **Troubleshooting**
+```bash
+make config-show         # Ver configurações atuais
+make ssh-check           # Verificar SSH
+make test                # Executar todos os testes
+make logs SERVICE=api    # Ver logs para debugging
+```
+
+### **Manutenção**
+```bash
+make backup              # Backup antes de mudanças
+make backup-clean        # Limpar backups antigos
+make restart             # Reiniciar serviços
+make clean               # Limpeza completa (cuidado!)
+```
+
+---
+
 **Mantido pela equipe DevOps da Inoveon**  
-**Versão**: 1.0  
+**Versão**: 2.0 (com Makefile)  
 **Última atualização**: Janeiro 2025

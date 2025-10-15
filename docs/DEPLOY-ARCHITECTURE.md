@@ -270,40 +270,87 @@ O Traefik gera certificados automaticamente quando:
 | **Docker Copy** | N/A | `COPY dist /html/portal/projeto` |
 | **Health Check** | `/health` endpoint | Status HTTP 200 |
 
+## 🚀 Interface Simplificada (Makefile)
+
+O projeto inclui um **Makefile completo** que simplifica todos os comandos de deploy:
+
+### **Quick Start com Makefile**
+```bash
+# Clone e setup completo
+git clone https://github.com/empresa/projeto.git
+cd projeto
+make first-time
+
+# OU passo a passo:
+make install                    # Dependências
+make ssh PASSWORD=senha123      # Configurar SSH
+make clone                      # Clonar projetos  
+make setup                      # Setup inicial
+make deploy                     # Deploy completo
+```
+
+### **Comandos Principais**
+```bash
+# Deploy
+make deploy           # Deploy completo
+make deploy-api       # Deploy apenas API
+make deploy-web       # Deploy apenas Portal
+make deploy-force     # Deploy com rebuild forçado
+
+# Monitoramento
+make status           # Status de todos os serviços
+make health           # Health check completo
+make logs SERVICE=api # Ver logs específicos
+make logs-follow SERVICE=api  # Logs em tempo real
+
+# Manutenção
+make update           # Atualizar código e redeploy
+make backup           # Backup completo
+make restart          # Reiniciar serviços
+make clean            # Limpeza completa
+
+# Utilitários
+make help             # Lista todos os comandos
+make config-show      # Ver configurações
+make urls             # URLs do sistema
+make ssh-check        # Verificar SSH
+```
+
 ## 🚀 Fluxo de Deploy
 
 ### 1. Setup Inicial (Uma vez)
 ```bash
-# Clone do repositório de configurações
-git clone https://github.com/empresa/projeto.git
-cd projeto
+# Método simplificado (recomendado)
+make first-time
 
-# Clone dos sub-projetos
+# Método manual (para casos específicos)
 ./clone-projects.sh
-
-# Configuração inicial
 ./setup.sh
 ```
 
 ### 2. Deploy Completo
 ```bash
-# Deploy de todos os componentes
+# Método simplificado (recomendado)
+make deploy
+
+# Método manual (para casos específicos)
 ./deploy/deploy.sh all
 
-# Ou componentes específicos
-./api/deploy/deploy.sh
-./web/deploy/deploy.sh
+# Deploy individual
+make deploy-api       # ou ./api/deploy/deploy.sh
+make deploy-web       # ou ./web/deploy/deploy.sh
 ```
 
 ### 3. Monitoramento
 ```bash
-# Logs em tempo real
+# Método simplificado (recomendado)
+make status
+make health
+make logs-follow SERVICE=api
+
+# Método manual (para casos específicos)
 ./scripts/logs.sh
-
-# Health check
 ./scripts/health-check.sh
-
-# Backup
 ./scripts/backup.sh
 ```
 
@@ -427,7 +474,33 @@ LOG_LEVEL=INFO
 
 ## 🔧 Comandos Úteis
 
-### Docker
+### **Via Makefile (Recomendado)**
+```bash
+# Status e monitoramento
+make status                     # Status de todos os containers
+make health                     # Health check completo
+make logs SERVICE=api           # Logs específicos
+make logs-follow SERVICE=api    # Logs em tempo real
+make config-show               # Ver configurações atuais
+
+# Deploy e atualizações
+make deploy                    # Deploy completo
+make deploy-api                # Deploy apenas API
+make update                    # Atualizar código e redeploy
+make restart                   # Reiniciar serviços
+
+# Backup e manutenção
+make backup                    # Backup completo
+make backup-list               # Listar backups
+make backup-clean              # Limpar backups antigos
+
+# SSH e conectividade
+make ssh-check                 # Verificar SSH
+make test                      # Testes de validação
+make urls                      # URLs do sistema
+```
+
+### **Comandos Docker Diretos**
 ```bash
 # Ver containers ativos
 docker ps | grep projeto
@@ -440,7 +513,7 @@ docker logs projeto-portal-1 -f
 docker logs traefik | grep projeto
 ```
 
-### Traefik
+### **Traefik**
 ```bash
 # Ver rotas registradas
 curl http://localhost:8080/api/http/routers
@@ -449,7 +522,7 @@ curl http://localhost:8080/api/http/routers
 http://localhost:8080
 ```
 
-### Diagnóstico
+### **Diagnóstico Manual**
 ```bash
 # Testar conectividade
 curl -I https://office.inoveon.com.br/api/projeto/health
@@ -488,6 +561,6 @@ nslookup office.inoveon.com.br
 
 *Arquitetura padronizada para deploy eficiente e escalável usando Traefik como proxy reverso.*
 
-**Versão**: 1.0  
+**Versão**: 2.0 (com Makefile)  
 **Última atualização**: Janeiro 2025  
 **Mantido por**: Equipe DevOps Inoveon

@@ -6,108 +6,116 @@ version: '3.9'
 services:
   # 🔧 API Backend
   suporte-api:
-    build: 
-      context: ../api/suporte_chamados_api_fastapi
-      dockerfile: ../deploy/Dockerfile.prod
+    build:
+      context: ./api/suporte_chamados_api_fastapi
+      dockerfile: ../api/deploy/Dockerfile.prod
     container_name: suporte-api
     restart: unless-stopped
     env_file:
-      - ../api/deploy/.env
+      - ./api/deploy/.env
     environment:
-      - DATABASE_URL=postgresql://suporte_user:${POSTGRES_PASSWORD}@suporte-db:5432/suporte_chamados
+      - DATABASE_URL=postgresql://suporte_user:XLgurNArM2FQTVbOyqyTCEEt0FUtaYF5@postgres-shared:5432/suporte_db
       - REDIS_URL=redis://suporte-redis:6379/0
+    # 🌐 HYBRID DEPLOY: Expõe porta 8002 para acesso direto (IP:8002)
+    ports:
+      - "8002:8002"
     volumes:
       - ../api/suporte_chamados_api_fastapi/uploads:/app/uploads
       - ../api/suporte_chamados_api_fastapi/logs:/app/logs
     depends_on:
-      suporte-db:
-        condition: service_healthy
       suporte-redis:
         condition: service_healthy
     labels:
       - traefik.enable=true
-      
+
       # HTTP Router
       - traefik.http.routers.suporte-api-http.rule=PathPrefix(`/api/suporte`)
       - traefik.http.routers.suporte-api-http.entrypoints=web
-      - traefik.http.routers.suporte-api-http.middlewares=suporte-api-strip@docker
+      - traefik.http.routers.suporte-api-http.middlewares=suporte-api-transform@docker
       - traefik.http.routers.suporte-api-http.priority=1
-      
+
       # HTTPS Router
       - traefik.http.routers.suporte-api.rule=Host(`office.inoveon.com.br`) && PathPrefix(`/api/suporte`)
       - traefik.http.routers.suporte-api.entrypoints=websecure
       - traefik.http.routers.suporte-api.tls=true
       - traefik.http.routers.suporte-api.tls.certresolver=letsencrypt
-      - traefik.http.routers.suporte-api.middlewares=suporte-api-strip@docker
+      - traefik.http.routers.suporte-api.middlewares=suporte-api-transform@docker
       - traefik.http.routers.suporte-api.priority=2
-      
-      # Middleware StripPrefix
+
+      # 🔧 HYBRID DEPLOY: StripPrefix + AddPrefix Middleware Chain
+      # /api/suporte/health → strip → /health → addprefix → /api/health (FastAPI espera /api/*)
       - traefik.http.middlewares.suporte-api-strip.stripprefix.prefixes=/api/suporte
-      
-      # Service
-      - traefik.http.services.suporte-api.loadbalancer.server.port=8000
-      
+      - traefik.http.middlewares.suporte-api-add.addprefix.prefix=/api
+      - traefik.http.middlewares.suporte-api-transform.chain.middlewares=suporte-api-strip,suporte-api-add
+
+      # Service - Porta interna 8002
+      - traefik.http.services.suporte-api.loadbalancer.server.port=8002
+
       # Health Check
-      - traefik.http.services.suporte-api.loadbalancer.healthcheck.path=/health
+      - traefik.http.services.suporte-api.loadbalancer.healthcheck.path=/api/health
       - traefik.http.services.suporte-api.loadbalancer.healthcheck.interval=30s
     networks:
       - traefik_net
       - suporte_internal
+      - database_net
 
   # 🌐 Web Portal
   suporte-portal:
     build:
-      context: ../web/suporte_dashboard_web_react
-      dockerfile: ../deploy/Dockerfile.prod
+      context: ./web/suporte_dashboard_web_react
+      dockerfile: ../web/deploy/Dockerfile.prod
     container_name: suporte-portal
     restart: unless-stopped
     env_file:
-      - ../web/deploy/.env
+      - ./web/deploy/.env
+    # 🌐 HYBRID DEPLOY: Expõe porta 3002 para acesso direto (IP:3002)
+    ports:
+      - "3002:3002"
     labels:
       - traefik.enable=true
-      
+
       # HTTP Router
       - traefik.http.routers.suporte-portal-http.rule=PathPrefix(`/portal/suporte`)
       - traefik.http.routers.suporte-portal-http.entrypoints=web
       - traefik.http.routers.suporte-portal-http.priority=1
-      
+
       # HTTPS Router
       - traefik.http.routers.suporte-portal.rule=Host(`office.inoveon.com.br`) && PathPrefix(`/portal/suporte`)
       - traefik.http.routers.suporte-portal.entrypoints=websecure
       - traefik.http.routers.suporte-portal.tls=true
       - traefik.http.routers.suporte-portal.tls.certresolver=letsencrypt
       - traefik.http.routers.suporte-portal.priority=2
-      
-      # Service (SEM StripPrefix)
-      - traefik.http.services.suporte-portal.loadbalancer.server.port=80
-      
+
+      # Service - Porta interna 3002 (SEM StripPrefix - Nginx gerencia)
+      - traefik.http.services.suporte-portal.loadbalancer.server.port=3002
+
       # Health Check
-      - traefik.http.services.suporte-portal.loadbalancer.healthcheck.path=/portal/suporte/
+      - traefik.http.services.suporte-portal.loadbalancer.healthcheck.path=/health
       - traefik.http.services.suporte-portal.loadbalancer.healthcheck.interval=30s
     networks:
       - traefik_net
 
-  # 🗄️ PostgreSQL Database
-  suporte-db:
-    image: postgres:15-alpine
-    container_name: suporte-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: suporte_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-suporte_pass_change_me}
-      POSTGRES_DB: suporte_chamados
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=pt_BR.UTF-8 --lc-ctype=pt_BR.UTF-8"
-    volumes:
-      - suporte_postgres_data:/var/lib/postgresql/data
-      - ../api/suporte_chamados_api_fastapi/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U suporte_user -d suporte_chamados"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    networks:
-      - suporte_internal
+  # 🗄️ PostgreSQL Database (Usando postgres-shared externo)
+  # suporte-db:
+  #   image: postgres:15-alpine
+  #   container_name: suporte-db
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: suporte_user
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-suporte_pass_change_me}
+  #     POSTGRES_DB: suporte_chamados
+  #     POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=pt_BR.UTF-8 --lc-ctype=pt_BR.UTF-8"
+  #   volumes:
+  #     - suporte_postgres_data:/var/lib/postgresql/data
+  #     - ../api/suporte_chamados_api_fastapi/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U suporte_user -d suporte_chamados"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     - suporte_internal
 
   # 📦 Redis Cache
   suporte-redis:
@@ -131,7 +139,7 @@ services:
     container_name: suporte-adminer
     restart: unless-stopped
     environment:
-      ADMINER_DEFAULT_SERVER: suporte-db
+      ADMINER_DEFAULT_SERVER: postgres-shared
       ADMINER_DESIGN: pepa-linha
     labels:
       - traefik.enable=true
@@ -142,8 +150,8 @@ services:
       - traefik.http.middlewares.suporte-adminer-strip.stripprefix.prefixes=/adminer/suporte
       - traefik.http.routers.suporte-adminer.middlewares=suporte-adminer-strip@docker
       - traefik.http.services.suporte-adminer.loadbalancer.server.port=8080
-    depends_on:
-      - suporte-db
+    # depends_on:
+    #   - suporte-db  # Usando postgres-shared externo
     networks:
       - traefik_net
       - suporte_internal
@@ -164,6 +172,9 @@ networks:
   traefik_net:
     external: true
     name: traefik_net
+  database_net:
+    external: true
+    name: database_net
   suporte_internal:
     driver: bridge
     name: suporte_internal
