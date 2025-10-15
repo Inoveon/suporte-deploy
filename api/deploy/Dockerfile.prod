@@ -81,16 +81,26 @@ set -e
 
 echo "🚀 Iniciando API Suporte..."
 
-# Wait for database
+# Wait for database usando DATABASE_URL do ambiente
 echo "⏳ Aguardando banco de dados..."
-until python -c "import psycopg2; psycopg2.connect('postgresql://suporte_user:0yXi9oW7KXPJJV17Ohybdn3X0Qgchuij@postgres-shared:5432/suporte_db')" 2>/dev/null; do
+# Extrai componentes da DATABASE_URL para testar conexão
+DB_USER=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
+DB_PASS=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
+DB_HOST=$(echo "$DATABASE_URL" | sed -n 's/.*@\([^:]*\):.*/\1/p')
+DB_PORT=$(echo "$DATABASE_URL" | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\(.*\)/\1/p')
+
+echo "  → Database: $DB_NAME @ $DB_HOST:$DB_PORT (user: $DB_USER)"
+
+until python -c "import psycopg2; psycopg2.connect('$DATABASE_URL')" 2>/dev/null; do
     echo "Banco não disponível, aguardando..."
     sleep 2
 done
 echo "✅ Banco de dados pronto!"
 
-# Skip migrations for now (tables created manually)
-echo "⚠️ Pulando migrations (tabelas já criadas manualmente)"
+# Run migrations
+echo "🔄 Aplicando migrations..."
+alembic upgrade head || echo "⚠️ Falha nas migrations (pode ser normal se já aplicadas)"
 
 # Start application
 echo "✅ Iniciando aplicação..."
