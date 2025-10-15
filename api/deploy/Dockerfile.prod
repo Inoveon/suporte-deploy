@@ -83,17 +83,16 @@ echo "🚀 Iniciando API Suporte..."
 
 # Wait for database usando DATABASE_URL do ambiente
 echo "⏳ Aguardando banco de dados..."
-# Extrai componentes da DATABASE_URL para testar conexão
-DB_USER=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
-DB_PASS=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
-DB_HOST=$(echo "$DATABASE_URL" | sed -n 's/.*@\([^:]*\):.*/\1/p')
-DB_PORT=$(echo "$DATABASE_URL" | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
-DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\(.*\)/\1/p')
-
-echo "  → Database: $DB_NAME @ $DB_HOST:$DB_PORT (user: $DB_USER)"
+RETRY_COUNT=0
+MAX_RETRIES=30
 
 until python -c "import psycopg2; psycopg2.connect('$DATABASE_URL')" 2>/dev/null; do
-    echo "Banco não disponível, aguardando..."
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        echo "❌ Timeout aguardando banco de dados após $MAX_RETRIES tentativas"
+        exit 1
+    fi
+    echo "Tentativa $RETRY_COUNT/$MAX_RETRIES: Banco não disponível, aguardando..."
     sleep 2
 done
 echo "✅ Banco de dados pronto!"
