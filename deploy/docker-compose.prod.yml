@@ -74,14 +74,15 @@ services:
       - "3002:3002"
     labels:
       - traefik.enable=true
+      - traefik.docker.network=traefik_net
 
       # HTTP Router
-      - traefik.http.routers.suporte-portal-http.rule=PathPrefix(`/portal/suporte`)
+      - traefik.http.routers.suporte-portal-http.rule=PathPrefix(`/suporte`)
       - traefik.http.routers.suporte-portal-http.entrypoints=web
       - traefik.http.routers.suporte-portal-http.priority=1
 
       # HTTPS Router
-      - traefik.http.routers.suporte-portal.rule=Host(`office.inoveon.com.br`) && PathPrefix(`/portal/suporte`)
+      - traefik.http.routers.suporte-portal.rule=Host(`office.inoveon.com.br`) && PathPrefix(`/suporte`)
       - traefik.http.routers.suporte-portal.entrypoints=websecure
       - traefik.http.routers.suporte-portal.tls=true
       - traefik.http.routers.suporte-portal.tls.certresolver=letsencrypt
