@@ -149,6 +149,38 @@ chmod +x scripts/test-endpoints.sh
 
 ---
 
+#### [LICOES-APRENDIDAS-IMPLEMENTACAO.md](LICOES-APRENDIDAS-IMPLEMENTACAO.md) 🎓 **NOVO!**
+**Tempo de leitura**: 20 minutos
+**Quando usar**: Antes de implementar ou quando encontrar problemas
+
+**Conteúdo**:
+- ✅ **7 problemas reais encontrados e soluções**
+- ✅ Erros de senha do banco de dados
+- ✅ Problema de path duplicado com root_path
+- ✅ Traefik usando IP errado da rede
+- ✅ Health check failing com TrustedHostMiddleware
+- ✅ Configurações críticas testadas em produção
+- ✅ Checklist de validação completo
+- ✅ Comandos de troubleshooting
+
+**Para quem**: **ESSENCIAL** - Todos que vão implementar
+
+---
+
+#### [TROUBLESHOOTING-RAPIDO.md](TROUBLESHOOTING-RAPIDO.md) 🚨 **NOVO!**
+**Tempo de leitura**: 5 minutos
+**Quando usar**: Quando algo não está funcionando
+
+**Conteúdo**:
+- ✅ Diagnóstico rápido de problemas comuns
+- ✅ Comandos essenciais copy & paste
+- ✅ Checklist de 5 minutos
+- ✅ Soluções rápidas testadas
+
+**Para quem**: DevOps, troubleshooting urgente
+
+---
+
 ### 5️⃣ Documentação Relacionada (na pasta docs/)
 
 #### [DEPLOY-ARCHITECTURE.md](../DEPLOY-ARCHITECTURE.md)
@@ -195,7 +227,9 @@ docs/
 │   ├── DEPLOY-HIBRIDO-GUIA-COMPLETO.md     ← Guia técnico
 │   ├── GUIA-IMPLEMENTACAO-PASSO-A-PASSO.md ← Tutorial prático
 │   ├── TEMPLATES-CONFIGURACAO.md            ← Templates prontos
-│   └── PORTAS-ESTRATEGIA.md                 ← Portas deste projeto
+│   ├── PORTAS-ESTRATEGIA.md                 ← Portas deste projeto
+│   ├── LICOES-APRENDIDAS-IMPLEMENTACAO.md   ← Problemas reais + soluções 🆕
+│   └── TROUBLESHOOTING-RAPIDO.md            ← Guia rápido de troubleshooting 🆕
 │
 ├── archived/                            ← Documentação arquivada
 │   ├── README.md                        ← Info sobre arquivados
@@ -232,11 +266,13 @@ scripts/
 
 ```
 1. Ler: RESUMO-EXECUTIVO-DEPLOY-HIBRIDO.md (10 min)
-2. Ler: GUIA-COMPLETO.md - seções relevantes (20 min)
-3. Seguir: GUIA-IMPLEMENTACAO-PASSO-A-PASSO.md (7-8h)
-4. Usar: TEMPLATES-CONFIGURACAO.md (copy & paste)
-5. Validar: ./scripts/validate-hybrid-deploy.sh
-6. Testar: ./scripts/test-endpoints.sh
+2. Ler: LICOES-APRENDIDAS-IMPLEMENTACAO.md (20 min) 🆕 ESSENCIAL!
+3. Ler: GUIA-COMPLETO.md - seções relevantes (20 min)
+4. Seguir: GUIA-IMPLEMENTACAO-PASSO-A-PASSO.md (7-8h)
+5. Usar: TEMPLATES-CONFIGURACAO.md (copy & paste)
+6. Validar: ./scripts/validate-hybrid-deploy.sh
+7. Testar: ./scripts/test-endpoints.sh
+8. Se problemas: TROUBLESHOOTING-RAPIDO.md 🆕
 ```
 
 ---
@@ -258,13 +294,15 @@ scripts/
 ### Fluxo 4: DevOps fazendo troubleshooting
 
 ```
-1. Ver: GUIA-COMPLETO.md - Troubleshooting
-2. Executar: ./scripts/validate-hybrid-deploy.sh
-3. Executar: ./scripts/test-endpoints.sh
-4. Ver logs específicos:
+1. Ver: TROUBLESHOOTING-RAPIDO.md (5 min) 🆕 INÍCIO AQUI!
+2. Se não resolver: LICOES-APRENDIDAS-IMPLEMENTACAO.md (20 min)
+3. Executar: ./scripts/validate-hybrid-deploy.sh
+4. Executar: ./scripts/test-endpoints.sh
+5. Ver logs específicos:
    - docker logs traefik | grep erro
    - docker logs suporte-api -f
    - docker logs suporte-portal -f
+6. Caso complexo: GUIA-COMPLETO.md - Troubleshooting
 ```
 
 ---
