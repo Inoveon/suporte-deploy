@@ -51,8 +51,8 @@ services:
       # Service - Porta interna 8002
       - traefik.http.services.suporte-api.loadbalancer.server.port=8002
 
-      # Health Check
-      - traefik.http.services.suporte-api.loadbalancer.healthcheck.path=/api/health
+      # Health Check (sem /api pois já está após o addprefix)
+      - traefik.http.services.suporte-api.loadbalancer.healthcheck.path=/health
       - traefik.http.services.suporte-api.loadbalancer.healthcheck.interval=30s
     networks:
       - traefik_net
