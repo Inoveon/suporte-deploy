@@ -108,8 +108,13 @@ server {
     }
 
     # 🌐 HYBRID DEPLOY: Desenvolvimento - Acesso direto via raiz (IP:3002)
+    # Redireciona raiz para /suporte/
+    location = / {
+        return 301 /suporte/;
+    }
+
     location / {
-        try_files $uri $uri/ /suporte/index.html;
+        try_files $uri $uri/ =404;
 
         # No cache for HTML files
         location ~* \.html$ {
